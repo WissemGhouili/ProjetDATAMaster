@@ -1,0 +1,14 @@
+services:
+  db_postgres:
+    image: postgres:latest
+    container_name: postgres_app_data
+    restart: always
+    environment:
+      POSTGRES_DB: app_data
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pwd
+    ports:
+      - "5432:5432"
+    
+
+
