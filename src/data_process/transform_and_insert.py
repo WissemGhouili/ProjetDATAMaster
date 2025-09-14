@@ -7,9 +7,7 @@ from sqlalchemy.engine import Engine
 # DB CONNECTION
 # =========================
 def get_engine() -> Engine:
-    """
-    Create SQLAlchemy engine for PostgreSQL.
-    """
+    """Create SQLAlchemy engine for PostgreSQL."""
     return create_engine("postgresql://postgres:pwd@localhost:5432/app_data")
 
 # Global variable to store siren sets between functions
@@ -25,7 +23,6 @@ def process_etablissements(engine: Engine, chunksize: int = 10_000):
     Return the DataFrame filtered for next steps.
     """
     #global siren_filter_set
-
     communes_cibles = ("MARSEILLE", "AIX-EN-PROVENCE")
     df_final = pd.DataFrame()
 
@@ -82,7 +79,6 @@ def process_unite_legale(engine: Engine, siren_filter_set: set, chunksize: int =
     Keep only active companies (etatAdministratifUniteLegale = 'A') and filter on siren from etablissements.
     """
     #global siren_filter_set
-
     # If siren_filter_set is empty, no data to process
     if not siren_filter_set:
         print("No siren filter defined. Skipping unite_legale processing.")
@@ -124,7 +120,6 @@ def process_donnees_financieres(engine: Engine, siren_filter_set: set, chunksize
     Filter on siren from etablissements.
     """
     #global siren_filter_set
-
     if not siren_filter_set:
         print("No siren filter defined. Skipping donnees_financieres processing.")
         return

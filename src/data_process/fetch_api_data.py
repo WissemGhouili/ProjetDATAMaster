@@ -9,7 +9,7 @@ load_dotenv()  # Load environment variables from .env
 
 def fetch_all_inpi_data():
     """
-    Fetches all company financial ratios data from the INPI BCE dataset using pagination.
+    Fetch all company financial ratios data from the INPI BCE dataset using pagination.
     Returns a list of company records.
     """
     base_url = "https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/ratios_inpi_bce/records"
@@ -43,10 +43,9 @@ def fetch_all_inpi_data():
 
 def fetch_insee_data_by_siren(df_inpi):
     """
-    Fetches detailed INSEE data for each unique SIREN in the given INPI DataFrame.
+    Fetch detailed INSEE data for each unique SIREN in the given INPI DataFrame.
     Returns a list of INSEE records.
     """
-    
     api_key = os.getenv("INSEE_API_KEY")
     if not api_key:
         raise ValueError("INSEE_API_KEY not found in environment variables.")
@@ -76,8 +75,6 @@ def fetch_insee_data_by_siren(df_inpi):
 
 
 def save_data_to_csv(data, path):
-    """
-    Saves a list of dictionaries or DataFrame to a CSV file.
-    """
+    """Save a list of dictionaries or DataFrame to a CSV file."""
     df = pd.DataFrame(data)
     df.to_csv(path, index=False)
