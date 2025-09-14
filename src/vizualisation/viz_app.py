@@ -152,6 +152,20 @@ if onglet == "Exploration":
         df_filtered = pd.DataFrame()
 
     def evolution_top_secteurs(df_filtered, donnees_fin, naf_lib, n_years=3):
+        """
+        Compute the top 5 sectors with the highest revenue growth over a specified number of years.
+
+        Args:
+            df_filtered (pd.DataFrame): Filtered establishments DataFrame.
+            donnees_fin (pd.DataFrame): Financial data DataFrame with revenue information.
+            naf_lib (pd.DataFrame): NAF code to label mapping DataFrame.
+            n_years (int, optional): Number of years to consider for evolution. Defaults to 3.
+
+        Returns:
+            top5_evol (pd.DataFrame): Top 5 sectors sorted by revenue growth percentage.
+            df_ca_hist (pd.DataFrame): Historical revenue data for top sectors.
+        """
+
         df_merge = (
             df_filtered[["siren", "activiteprincipaleunitelegale"]]
             .drop_duplicates()
@@ -201,6 +215,12 @@ if onglet == "Exploration":
         return top5_evol, df_ca_hist
 
     def show_map_and_get_selection():
+        """
+        Display the Pydeck map with establishment icons and return the selected establishment's SIREN.
+
+        Returns:
+            str or None: The SIREN of the selected establishment, or None if no selection.
+        """
         if commune_selected != "-- Choisir une commune --":
             initial_view_map = pdk.ViewState(
                 latitude=coords_communes[commune_selected][0],
