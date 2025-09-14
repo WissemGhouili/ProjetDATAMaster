@@ -115,8 +115,8 @@ if onglet == "Exploration":
     # ======
     # Filtres horizontaux
     # ======
-    col_A, col_B = st.columns(2)
-    with col_A:
+    col_a, col_b = st.columns(2)
+    with col_a:
         commune_selected = st.selectbox(
             "Commune", ["-- Choisir une commune --"] + list(coords_communes.keys())
         )
@@ -125,7 +125,7 @@ if onglet == "Exploration":
     naf_select_list = ["-- Tous --"] + [
         f"{row['Code']} - {row['Libelle']}" for _, row in code_naf_labels.iterrows()
     ]
-    with col_B:
+    with col_b:
         code_naf_selected = st.selectbox(
             "Secteur d'activité (Code NAF)",
             naf_select_list if commune_selected != "-- Choisir une commune --" else ["-- Tous --"]
