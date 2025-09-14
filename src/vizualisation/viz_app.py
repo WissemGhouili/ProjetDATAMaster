@@ -11,6 +11,7 @@ st.set_page_config(layout="wide")
 # ======
 # Chargement des données
 # ======
+
 @st.cache_data
 def load_data():
     """Load and merge establishment and legal unit data, then convert coordinates.
@@ -75,6 +76,7 @@ def load_data():
         df["coordonneelambertordonneeetablissement"].values
     )
     return df.dropna(subset=["latitude", "longitude"]), naf_lib, donnees_fin, tranche_lib
+
 
 df, naf_lib, donnees_fin, tranche_lib = load_data()
 
@@ -262,9 +264,8 @@ if onglet == "Exploration":
     index_general = tab_labels.index("Général")
     index_selection = tab_labels.index("Sélection")
 
-
     with tabs[index_general]:
-        #st.write(df_filtered.shape[0], "établissements affichés")
+        # st.write(df_filtered.shape[0], "établissements affichés")
         if df_filtered.empty:
             st.write("Aucun établissement à afficher pour cette sélection.")
         else:
@@ -284,13 +285,13 @@ if onglet == "Exploration":
                 top_secteurs["Secteur"] = top_secteurs["Libelle"]
                 with cols[0]:
                     st.markdown("### Top secteurs")
-                    #st.dataframe(top_secteurs[["Code NAF", "Secteur", "Nombre établissements"]], height=120)
+                    # st.dataframe(top_secteurs[["Code NAF", "Secteur", "Nombre établissements"]], height=120)
                     st.bar_chart(top_secteurs.set_index("Secteur")[["Nombre établissements"]])
 
                 top5_evol, df_ca_hist = evolution_top_secteurs(df_filtered, donnees_fin, naf_lib, n_years=3)
                 with cols[1]:
                     st.markdown("### Évolution CA secteurs (3 ans)")
-                    #st.dataframe(top5_evol[["activiteprincipaleunitelegale", "Libelle", "evol_pct", "evol_ca"]], height=120)
+                    # st.dataframe(top5_evol[["activiteprincipaleunitelegale", "Libelle", "evol_pct", "evol_ca"]], height=120)
                     chart = alt.Chart(df_ca_hist).mark_line(point=True).encode(
                         x="annee:O",
                         y="chiffre_d_affaires:Q",
@@ -335,7 +336,7 @@ if onglet == "Exploration":
                         "denominationunitelegale", "siren", "chiffre_d_affaires"
                     ]]
                     st.markdown("### Top CA établissements")
-                    #st.dataframe(top_etabs, height=120)
+                    # st.dataframe(top_etabs, height=120)
                     st.bar_chart(top_etabs.set_index("denominationunitelegale")[["chiffre_d_affaires"]])
 
                 with cols[1]:
@@ -359,8 +360,8 @@ if onglet == "Exploration":
                     st.markdown(f"### Évolution CA {code_naf_sel_lib}")
                     st.altair_chart(chart, use_container_width=True)
 
-                #with cols[2]:
-                    #st.markdown("### Placeholder graphique/actions")
+                # with cols[2]:
+                    # st.markdown("### Placeholder graphique/actions")
                     # Place ici tout autre graphique complémentaire
 
         # Onglet sélection
@@ -415,7 +416,7 @@ elif onglet == "À propos":
     - Analyses graphiques dynamiques : répartition des établissements, évolution sectorielle, top entreprise
     - Carte interactive géolocalisée, mise à jour avec les données SIRENE et INSEE
     - Idéal pour analyse territoriale, urbanisme, prospection commerciale, veille économique
-    
+                
     Développé avec Python, pandas, Streamlit et pydeck.
     """)
 

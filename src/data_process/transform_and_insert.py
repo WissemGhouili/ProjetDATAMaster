@@ -33,7 +33,7 @@ def process_etablissements(spark: SparkSession, communes_cibles=("MARSEILLE", "A
     Keep only active establishments and filter by commune.
     Returns Spark DataFrame filtered.
     """
-    query = f"""
+    query = """
     (
         SELECT * FROM etablissements_raw
         WHERE etatAdministratifEtablissement = 'A'

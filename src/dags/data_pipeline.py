@@ -98,7 +98,7 @@ with DAG(
     "data_pipeline",
     default_args={"owner": "airflow", "retries": 1},
     description="Pipeline ETL/ELT des données entreprises",
-    schedule_interval="@daily", 
+    schedule_interval="@daily",
     start_date=datetime(2025, 1, 1),
     catchup=False,
 ) as dag:
