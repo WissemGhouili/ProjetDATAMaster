@@ -1,186 +1,208 @@
-"""Module to transform and insert data into final tables."""
-import pandas as pd
-from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
+"""Module to transform and insert data into final tables using PySpark."""
+
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, length, to_date, when
+from typing import Set
+
 
 # =========================
-# DB CONNECTION
+# CREATE SPARK SESSION & DB CONFIG
 # =========================
-def get_engine() -> Engine:
-    """Create SQLAlchemy engine for PostgreSQL."""
-    return create_engine("postgresql://postgres:pwd@localhost:5432/app_data")
 
-# Global variable to store siren sets between functions
-#siren_filter_set = set()
+
+def get_spark():
+    return SparkSession.builder.appName("transform-and-insert").getOrCreate()
+
+
+DB_URI = "jdbc:postgresql://localhost:5432/app_data"
+DB_USER = "postgres"
+DB_PWD = "pwd"
+
 
 # =========================
-# ETABLISSEMENTS
+# ETABLISSEMENTS PROCESSING
 # =========================
-def process_etablissements(engine: Engine, chunksize: int = 10_000):
+
+
+def process_etablissements(spark: SparkSession, communes_cibles=("MARSEILLE", "AIX-EN-PROVENCE")):
     """
-    Clean and insert etablissements_raw into etablissements table in batches.
-
-    Keep only active establishments (etatAdministratifEtablissement = 'A') and filter by libelleCommuneEtablissement.
-    Return the DataFrame filtered for next steps.
+    Clean and insert etablissements_raw into etablissements table.
+    Keep only active establishments and filter by commune.
+    Returns Spark DataFrame filtered.
     """
-    #global siren_filter_set
-    communes_cibles = ("MARSEILLE", "AIX-EN-PROVENCE")
-    df_final = pd.DataFrame()
-
-    query = """
-        SELECT * 
-        FROM etablissements_raw
+    query = f"""
+    (
+        SELECT * FROM etablissements_raw
         WHERE etatAdministratifEtablissement = 'A'
-          AND libelleCommuneEtablissement IN ('MARSEILLE', 'AIX-EN-PROVENCE');
+        AND libelleCommuneEtablissement IN ('MARSEILLE', 'AIX-EN-PROVENCE')
+    ) AS filtered_etablissements
     """
+    df = (
+        spark.read.format("jdbc")
+        .option("url", DB_URI)
+        .option("dbtable", query)
+        .option("user", DB_USER)
+        .option("password", DB_PWD)
+        .load()
+    )
 
-    for chunk in pd.read_sql(query, engine, chunksize=chunksize):
-        print(chunk.columns.tolist())
-        df = chunk[[
-            "siret", "siren", "etatadministratifetablissement", "datecreationetablissement", "trancheeffectifsetablissement",
-            "anneeeffectifsetablissement", "complementadresseetablissement", "numerovoieetablissement",
-            "typevoieetablissement", "libellevoieetablissement", "codepostaletablissement",
-            "libellecommuneetablissement", "coordonneelambertabscisseetablissement",
-            "coordonneelambertordonneeetablissement"
-        ]].copy()
+    wanted_cols = [
+        "siret",
+        "siren",
+        "etatAdministratifEtablissement",
+        "dateCreationEtablissement",
+        "trancheEffectifsEtablissement",
+        "anneeEffectifsEtablissement",
+        "complementAdresseEtablissement",
+        "numeroVoieEtablissement",
+        "typeVoieEtablissement",
+        "libelleVoieEtablissement",
+        "codePostalEtablissement",
+        "libelleCommuneEtablissement",
+        "coordonneeLambertAbscisseEtablissement",
+        "coordonneeLambertOrdonneeEtablissement",
+    ]
+    cols = [c for c in wanted_cols if c in df.columns]
+    df = df.select(*cols)
 
-        print("fin du import etablissement")
-        
-        # Clean dates
-        df["datecreationetablissement"] = pd.to_datetime(df["datecreationetablissement"], errors="coerce")
+    # Clean date
+    df = df.withColumn("dateCreationEtablissement", to_date(col("dateCreationEtablissement")))
 
-        # Keep only valid postal codes (5 digits)
-        df.loc[df["codepostaletablissement"].str.len() != 5, "codepostaletablissement"] = None
+    # Code postal valid 5 digits or null
+    df = df.withColumn("codePostalEtablissement", col("codePostalEtablissement").cast("string"))
+    df = df.withColumn(
+        "codePostalEtablissement",
+        when(length(col("codePostalEtablissement")) == 5, col("codePostalEtablissement")),
+    )
 
-        # Drop rows with invalid coordinates (non-numeric or null)
-        df["coordonneelambertabscisseetablissement"] = pd.to_numeric(
-            df["coordonneelambertabscisseetablissement"], errors="coerce"
-        )
-        df["coordonneelambertordonneeetablissement"] = pd.to_numeric(
-            df["coordonneelambertordonneeetablissement"], errors="coerce"
-        )
+    # Cast coordinates
+    df = df.withColumn("coordonneeLambertAbscisseEtablissement", col("coordonneeLambertAbscisseEtablissement").cast("double"))
+    df = df.withColumn("coordonneeLambertOrdonneeEtablissement", col("coordonneeLambertOrdonneeEtablissement").cast("double"))
 
-        df = df.dropna(subset=["siret", "siren"])
-        
-        # Append chunk to final DataFrame
-        df_final = pd.concat([df_final, df], ignore_index=True)
-        print("fin du clean etablissement")
-        
-    # Save set of siren to filter
-    #siren_filter_set = set(df_final['siren'].unique())
-    
-    return df_final
+    # Drop rows with null siren or siret
+    df = df.dropna(subset=["siret", "siren"])
+
+    return df
+
 
 # =========================
-# UNITE LEGALE
+# UNITE LEGALE PROCESSING
 # =========================
-def process_unite_legale(engine: Engine, siren_filter_set: set, chunksize: int = 10_000):
-    """
-    Clean and insert unite_legale_raw into unite_legale table in batches.
 
-    Keep only active companies (etatAdministratifUniteLegale = 'A') and filter on siren from etablissements.
+
+def process_unite_legale(spark: SparkSession, siren_filter_set: Set[str]):
     """
-    #global siren_filter_set
-    # If siren_filter_set is empty, no data to process
+    Clean and insert unite_legale_raw into unite_legale table.
+    Keep only active and filtered by siren.
+    """
     if not siren_filter_set:
         print("No siren filter defined. Skipping unite_legale processing.")
         return
 
-    siren_list = tuple(siren_filter_set)
-    # Create a parameterized query with these sirens and etatAdministratif
-    # Use list formatting for IN clause safely via SQLAlchemy (or restrict size if too large)
-    # Here is a safe sliced approach if siren_list is too long (not shown for simplicity)
-    query = f"""
-        SELECT * 
-        FROM unite_legale_raw
-        WHERE etatAdministratifUniteLegale = 'A'
-          AND siren IN {siren_list};
-    """
+    df = (
+        spark.read.format("jdbc")
+        .option("url", DB_URI)
+        .option("dbtable", "unite_legale_raw")
+        .option("user", DB_USER)
+        .option("password", DB_PWD)
+        .load()
+    )
 
-    for chunk in pd.read_sql(query, engine, chunksize=chunksize):
-        df = chunk[[
-            "siren", "denominationunitelegale", "datecreationunitelegale",
-            "activiteprincipaleunitelegale", "categorieentreprise",
-            "anneecategorieentreprise", "trancheeffectifsunitelegale",
-            "anneeeffectifsunitelegale", "etatadministratifunitelegale"
-        ]].copy()
-        print("fin import unite")
-        # Clean
-        df["datecreationunitelegale"] = pd.to_datetime(df["datecreationunitelegale"], errors="coerce")
-        df = df.dropna(subset=["siren"])
-        print("fin du clean unite")
-        # Insert
-        df.to_sql("unite_legale", engine, if_exists="append", index=False, method="multi")
-        print(f"Inserted {len(df)} rows into unite_legale")
+    df = df.filter((col("etatAdministratifUniteLegale") == "A") & (col("siren").isin(list(siren_filter_set))))
+
+    wanted_cols = [
+        "siren",
+        "denominationUniteLegale",
+        "dateCreationUniteLegale",
+        "activitePrincipaleUniteLegale",
+        "categorieEntreprise",
+        "anneeCategorieEntreprise",
+        "trancheEffectifsUniteLegale",
+        "anneeEffectifsUniteLegale",
+        "etatAdministratifUniteLegale",
+    ]
+    cols = [c for c in wanted_cols if c in df.columns]
+    df = df.select(*cols)
+
+    df = df.withColumn("dateCreationUniteLegale", to_date(col("dateCreationUniteLegale")))
+    df = df.dropna(subset=["siren"])
+
+    df.write.format("jdbc").option("url", DB_URI).option("dbtable", "unite_legale").option("user", DB_USER).option(
+        "password", DB_PWD
+    ).mode("append").save()
+
+    print(f"Inserted {df.count()} rows into unite_legale")
+
 
 # =========================
-# DONNEES FINANCIERES
+# DONNEES FINANCIERES PROCESSING
 # =========================
-def process_donnees_financieres(engine: Engine, siren_filter_set: set, chunksize: int = 200_000):
-    """
-    Clean and insert donnees_financieres_raw into donnees_financieres table in batches.
 
-    Filter on siren from etablissements.
+
+def process_donnees_financieres(spark: SparkSession, siren_filter_set: Set[str]):
     """
-    #global siren_filter_set
+    Clean and insert donnees_financieres_raw into donnees_financieres table.
+    Filter on siren.
+    """
     if not siren_filter_set:
         print("No siren filter defined. Skipping donnees_financieres processing.")
         return
 
-    siren_list = tuple(siren_filter_set)
+    df = (
+        spark.read.format("jdbc")
+        .option("url", DB_URI)
+        .option("dbtable", "donnees_financieres_raw")
+        .option("user", DB_USER)
+        .option("password", DB_PWD)
+        .load()
+    )
 
-    query = f"""
-        SELECT * 
-        FROM donnees_financieres_raw
-        WHERE siren IN {siren_list};
-    """
+    df = df.filter(col("siren").isin(list(siren_filter_set)))
 
-    for chunk in pd.read_sql(query, engine, chunksize=chunksize):
-        df = chunk[[
-            "siren", "date_cloture_exercice", "chiffre_d_affaires", "resultat_net"
-        ]].copy()
+    wanted_cols = ["siren", "date_cloture_exercice", "chiffre_d_affaires", "resultat_net"]
+    cols = [c for c in wanted_cols if c in df.columns]
+    df = df.select(*cols)
 
-        print("fin du import inpi")
+    df = df.withColumn("date_cloture_exercice", to_date(col("date_cloture_exercice")))
+    df = df.withColumn("chiffre_d_affaires", col("chiffre_d_affaires").cast("double"))
+    df = df.withColumn("resultat_net", col("resultat_net").cast("double"))
+    df = df.dropna(subset=["siren"])
 
-        # Clean
-        df["date_cloture_exercice"] = pd.to_datetime(df["date_cloture_exercice"], errors="coerce")
-        df["chiffre_d_affaires"] = pd.to_numeric(df["chiffre_d_affaires"], errors="coerce")
-        df["resultat_net"] = pd.to_numeric(df["resultat_net"], errors="coerce")
+    df.write.format("jdbc").option("url", DB_URI).option("dbtable", "donnees_financieres").option("user", DB_USER).option(
+        "password", DB_PWD
+    ).mode("append").save()
 
-        df = df.dropna(subset=["siren"])
-        print("fin du clean inpi")
-        # Insert
-        df.to_sql("donnees_financieres", engine, if_exists="append", index=False, method="multi")
-        print(f"Inserted {len(df)} rows into donnees_financieres")
+    print(f"Inserted {df.count()} rows into donnees_financieres")
+
 
 # =========================
 # MAIN PIPELINE
 # =========================
+
+
 def run_pipeline():
-    """
-    Run the full data processing pipeline.
-    
-    1 Process etablissements_raw to etablissements.
-    2 Process unite_legale_raw to unite_legale using sirens from etablissements.
-    3 Process donnees_financieres_raw to donnees_financieres using sirens from etablissements.
-    4 Insert filtered etablissements into final table.
-    """
-    engine = get_engine()
+    spark = get_spark()
 
     print("Processing etablissements ...")
-    df_etablissements = process_etablissements(engine)
-    siren_filter_set = set(df_etablissements['siren'].unique())
+    df_etablissements = process_etablissements(spark)
+
+    siren_filter_set = set(row["siren"] for row in df_etablissements.select("siren").distinct().collect())
 
     print("Processing unite_legale ...")
-    process_unite_legale(engine, siren_filter_set)
-
-    # Insert into the final table
-    df_etablissements.to_sql("etablissements", engine, if_exists="append", index=False, method="multi")
-    print(f"Inserted {len(df_etablissements)} rows into etablissements")
+    process_unite_legale(spark, siren_filter_set)
 
     print("Processing donnees_financieres ...")
-    process_donnees_financieres(engine, siren_filter_set)
+    process_donnees_financieres(spark, siren_filter_set)
+
+    print("Inserting etablissements ...")
+    df_etablissements.write.format("jdbc").option("url", DB_URI).option("dbtable", "etablissements").option(
+        "user", DB_USER
+    ).option("password", DB_PWD).mode("append").save()
+    print(f"Inserted {df_etablissements.count()} rows into etablissements")
+
     print("All data cleaned and inserted into final tables")
+
 
 if __name__ == "__main__":
     run_pipeline()
