@@ -165,7 +165,6 @@ if onglet == "Exploration":
             top5_evol (pd.DataFrame): Top 5 sectors sorted by revenue growth percentage.
             df_ca_hist (pd.DataFrame): Historical revenue data for top sectors.
         """
-
         df_merge = (
             df_filtered[["siren", "activiteprincipaleunitelegale"]]
             .drop_duplicates()
