@@ -1,6 +1,4 @@
-"""
-Module for visualizations.
-"""
+"""Module for visualizations."""
 
 import streamlit as st
 import pandas as pd

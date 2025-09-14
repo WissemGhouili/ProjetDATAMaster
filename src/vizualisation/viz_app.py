@@ -1,3 +1,5 @@
+"""Main app for BizRadar: visualisation and analysis of establishments and economic data."""
+
 import streamlit as st
 import pandas as pd
 import pydeck as pdk
