@@ -39,7 +39,7 @@ This is my end of year projet of the Mastere Data Engineer in Ynov Aix Campus
 │
 ├── setup.cfg          <- Configuration file for flake8
 │
-└── ProjetDATAMastere   <- Source code for use in this project.
+└── src   <- Source code for use in this project.
     │
     ├── __init__.py             <- Makes ProjetDATAMastere a Python module
     │

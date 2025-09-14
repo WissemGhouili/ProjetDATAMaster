@@ -10,5 +10,12 @@ services:
     ports:
       - "5432:5432"
     
-
+  airflow:
+    image: apache/airflow:2.9.1
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
 

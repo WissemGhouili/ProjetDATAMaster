@@ -45,7 +45,7 @@ def fetch_insee_data_by_siren(df_inpi):
     Fetches detailed INSEE data for each unique SIREN in the given INPI DataFrame.
     Returns a list of INSEE records.
     """
-    import os
+    
     api_key = os.getenv("INSEE_API_KEY")
     if not api_key:
         raise ValueError("INSEE_API_KEY not found in environment variables.")

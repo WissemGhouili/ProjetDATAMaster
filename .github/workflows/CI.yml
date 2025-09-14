@@ -1,0 +1,36 @@
+name: Python Style and Docstring Check
+
+on:
+  push:
+    paths:
+      - '**.py'
+  pull_request:
+    paths:
+      - '**.py'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install linter dependencies
+      run: |
+        pip install flake8 pydocstyle flake8-docstrings pep8-naming
+
+    - name: Check docstrings
+      run: pydocstyle .
+
+    - name: Check naming conventions (snake_case)
+      run: flake8 --select=N .
+
+    - name: Check flake8 style rules (inc. docstrings)
+      run: flake8 . --max-line-length=120
+
+    # Option: fail the job if errors detected
