@@ -21,8 +21,7 @@ def get_engine() -> Engine:
 def process_etablissements(engine: Engine, chunksize: int = 10_000):
     """
     Clean and insert etablissements_raw into etablissements table in batches.
-    Keep only active establishments (etatAdministratifEtablissement = 'A') and filter
-    by libelleCommuneEtablissement.
+    Keep only active establishments (etatAdministratifEtablissement = 'A') and filter by libelleCommuneEtablissement.
     Return the DataFrame filtered for next steps.
     """
     #global siren_filter_set
@@ -161,11 +160,11 @@ def process_donnees_financieres(engine: Engine, siren_filter_set: set, chunksize
 # =========================
 def run_pipeline():
     """
-    Run the full data processing pipeline
-    1 Process etablissements_raw to etablissements
-    2 Process unite_legale_raw to unite_legale using sirens from etablissements
-    3 Process donnees_financieres_raw to donnees_financieres using sirens from etablissements
-    4 Insert filtered etablissements into final table
+    Run the full data processing pipeline.
+    1 Process etablissements_raw to etablissements.
+    2 Process unite_legale_raw to unite_legale using sirens from etablissements.
+    3 Process donnees_financieres_raw to donnees_financieres using sirens from etablissements.
+    4 Insert filtered etablissements into final table.
     """
     engine = get_engine()
 
