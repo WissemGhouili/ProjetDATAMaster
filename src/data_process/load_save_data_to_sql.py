@@ -12,12 +12,12 @@ def load_csv_to_dataframe(path):
 
 
 def merge_dataframes_on_siren(df_inpi, df_insee):
-    """Merges two DataFrames on the 'siren' column."""
+    """Merge two DataFrames on the 'siren' column."""
     return pd.merge(df_inpi, df_insee, on="siren", how="inner")
 
 
 def save_dataframe_to_postgres(df):
-    """Saves the DataFrame to a PostgreSQL database using SQLAlchemy."""
+    """Save the DataFrame to a PostgreSQL database using SQLAlchemy."""
     postgres_user = os.getenv("POSTGRES_USER")
     postgres_password = os.getenv("POSTGRES_PASSWORD")
     postgres_db_name = os.getenv("POSTGRES_DB")

@@ -10,6 +10,7 @@ load_dotenv()  # Load environment variables from .env
 def fetch_all_inpi_data():
     """
     Fetch all company financial ratios data from the INPI BCE dataset using pagination.
+
     Returns a list of company records.
     """
     base_url = "https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/ratios_inpi_bce/records"
@@ -44,6 +45,7 @@ def fetch_all_inpi_data():
 def fetch_insee_data_by_siren(df_inpi):
     """
     Fetch detailed INSEE data for each unique SIREN in the given INPI DataFrame.
+    
     Returns a list of INSEE records.
     """
     api_key = os.getenv("INSEE_API_KEY")
