@@ -12,6 +12,7 @@ from typing import Set
 
 
 def get_spark():
+    """Creates and configures a Spark session."""
     return SparkSession.builder.appName("transform-and-insert").getOrCreate()
 
 
@@ -28,6 +29,7 @@ DB_PWD = "pwd"
 def process_etablissements(spark: SparkSession, communes_cibles=("MARSEILLE", "AIX-EN-PROVENCE")):
     """
     Clean and insert etablissements_raw into etablissements table.
+
     Keep only active establishments and filter by commune.
     Returns Spark DataFrame filtered.
     """
@@ -94,6 +96,7 @@ def process_etablissements(spark: SparkSession, communes_cibles=("MARSEILLE", "A
 def process_unite_legale(spark: SparkSession, siren_filter_set: Set[str]):
     """
     Clean and insert unite_legale_raw into unite_legale table.
+
     Keep only active and filtered by siren.
     """
     if not siren_filter_set:
@@ -143,6 +146,7 @@ def process_unite_legale(spark: SparkSession, siren_filter_set: Set[str]):
 def process_donnees_financieres(spark: SparkSession, siren_filter_set: Set[str]):
     """
     Clean and insert donnees_financieres_raw into donnees_financieres table.
+
     Filter on siren.
     """
     if not siren_filter_set:
@@ -182,6 +186,14 @@ def process_donnees_financieres(spark: SparkSession, siren_filter_set: Set[str])
 
 
 def run_pipeline():
+    """
+    Run the full data processing pipeline.
+    
+    1 Process etablissements_raw to etablissements.
+    2 Process unite_legale_raw to unite_legale using sirens from etablissements.
+    3 Process donnees_financieres_raw to donnees_financieres using sirens from etablissements.
+    4 Insert filtered etablissements into final table.
+    """
     spark = get_spark()
 
     print("Processing etablissements ...")

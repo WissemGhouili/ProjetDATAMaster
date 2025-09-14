@@ -13,6 +13,7 @@ DB_PWD = "pwd"
 
 
 def get_spark():
+    """Creates and configures a Spark session."""
     return SparkSession.builder.appName("data-pipeline").getOrCreate()
 
 
