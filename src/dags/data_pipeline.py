@@ -1,3 +1,4 @@
+"""Airflow DAG for ETL/ELT data pipeline."""
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -11,6 +12,9 @@ DB_URI = "postgresql://postgres:pwd@postgres_app_data:5432/app_data"
 # =========================
 
 def extract_raw_data():
+    """
+    Extract raw data from the database and save to temporary CSV files.
+    """
     engine = create_engine(DB_URI)
     unite_legale = pd.read_sql("SELECT * FROM unite_legale_raw WHERE etatAdministratifUniteLegale = 'A';", engine)
     etablissements = pd.read_sql("SELECT * FROM etablissements_raw WHERE etatAdministratifEtablissement = 'A';", engine)
@@ -22,6 +26,8 @@ def extract_raw_data():
 
 
 def transform_clean_data():
+    """ 
+    Clean and transform raw data, then save cleaned data to temporary CSV files."""
     # Chargement
     unite_legale = pd.read_csv("/tmp/unite_legale.csv")
     etablissements = pd.read_csv("/tmp/etablissements.csv")
@@ -42,6 +48,9 @@ def transform_clean_data():
 
 
 def load_final_tables():
+    """
+    Load cleaned data into final database tables.
+    """
     engine = create_engine(DB_URI)
     # Lecture fichiers nettoyés
     unite_legale = pd.read_csv("/tmp/unite_legale_clean.csv")

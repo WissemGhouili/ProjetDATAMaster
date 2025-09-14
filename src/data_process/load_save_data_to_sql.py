@@ -1,3 +1,4 @@
+"""Module to load CSV data, merge DataFrames, and save to PostgreSQL database."""
 import pandas as pd
 from sqlalchemy import create_engine
 from dotenv import load_dotenv

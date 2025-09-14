@@ -1,3 +1,4 @@
+"""Module to fetch data from INPI and INSEE APIs and save to CSV files."""
 import requests
 import time
 import pandas as pd
