@@ -11,6 +11,11 @@ st.set_page_config(layout="wide")
 # ======
 @st.cache_data
 def load_data():
+    """Load and merge establishment and legal unit data, then convert coordinates.
+
+    Returns:
+        pd.DataFrame: Processed DataFrame with latitude and longitude columns.
+    """
     etablissements = pd.read_csv(
         "../../data/processed/etablissements.csv",
         dtype={
