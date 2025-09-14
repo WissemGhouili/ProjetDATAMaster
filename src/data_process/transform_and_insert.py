@@ -12,7 +12,7 @@ from typing import Set
 
 
 def get_spark():
-    """Creates and configures a Spark session."""
+    """Create and configures a Spark session."""
     return SparkSession.builder.appName("transform-and-insert").getOrCreate()
 
 
