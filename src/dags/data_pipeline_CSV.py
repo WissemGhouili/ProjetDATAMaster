@@ -60,7 +60,7 @@ def transform_clean_data():
         .filter(length(etablissements["codePostalEtablissement"].cast("string")) <= 5)
     etablissements = etablissements.dropna(subset=["coordonneeLambertAbscisseEtablissement", "coordonneeLambertOrdonneeEtablissement"])
 
-    # Nettoyage INPI : CA >= 0
+    # Nettoyage INPI
     from pyspark.sql.functions import col
     donnees_financieres = donnees_financieres.filter(col("Chiffre_d_affaires") >= 0)
 
@@ -98,7 +98,7 @@ with DAG(
     "data_pipeline",
     default_args={"owner": "airflow", "retries": 1},
     description="Pipeline ETL/ELT des données entreprises",
-    schedule_interval="@daily",
+    schedule="@monthly",
     start_date=datetime(2025, 1, 1),
     catchup=False,
 ) as dag:
