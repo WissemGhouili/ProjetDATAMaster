@@ -27,7 +27,7 @@ jobs:
 
     - name: Run Pytest
       run: |
-        pytest tests/test_simple_functions.py --maxfail=3 --disable-warnings -q
+        pytest tests/test_functions.py --maxfail=3 --disable-warnings -q
 
   lint:
     runs-on: ubuntu-latest
