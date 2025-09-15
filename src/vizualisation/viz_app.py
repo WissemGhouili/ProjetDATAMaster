@@ -12,6 +12,8 @@ st.set_page_config(layout="wide")
 # Chargement des données
 # ======
 
+
+
 @st.cache_data
 def load_data():
     """Load and merge establishment and legal unit data, then convert coordinates.
@@ -411,12 +413,10 @@ elif onglet == "À propos":
     st.subheader("À propos de BizRadar")
     st.markdown("""
     **BizRadar** est une application web interactive de visualisation des établissements et de leur dynamique économique à l'échelle locale.
-    
     - Exploration par commune et par secteur d'activité (code NAF)
     - Analyses graphiques dynamiques : répartition des établissements, évolution sectorielle, top entreprise
     - Carte interactive géolocalisée, mise à jour avec les données SIRENE et INSEE
     - Idéal pour analyse territoriale, urbanisme, prospection commerciale, veille économique
-                
     Développé avec Python, pandas, Streamlit et pydeck.
     """)
 

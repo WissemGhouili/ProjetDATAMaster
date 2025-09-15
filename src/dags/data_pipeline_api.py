@@ -109,7 +109,7 @@ with DAG(dag_id="data_pipeline_api", schedule="@daily", default_args=default_arg
 
     @task
     def process_and_save_data(etablissements: list, unites_legales: list):
-        """ 
+        """
         Traite les données récupérées avec Spark, filtre les actifs, et sauvegarde dans PostgreSQL.
 
         Args:

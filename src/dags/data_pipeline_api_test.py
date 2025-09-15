@@ -49,6 +49,7 @@ with DAG(
     def get_last_update():
         """
         Récupère la date de dernière mise à jour stockée dans Variable Airflow 'last_update'.
+        
         Si aucune valeur n'est définie, utilise la date du jour.
 
         Returns:
@@ -121,7 +122,7 @@ with DAG(
 
     @task
     def process_and_save_data(etablissements: list, unites_legales: list):
-        """ 
+        """
         Traite les données récupérées avec Spark, filtre les actifs, et sauvegarde dans PostgreSQL.
 
         Args:
@@ -202,9 +203,7 @@ with DAG(
 
     @task
     def update_last_update():
-        """
-        Met à jour la Variable Airflow 'last_update' avec la date du jour.
-        """
+        """Met à jour la Variable Airflow 'last_update' avec la date du jour."""
         today = datetime.today().strftime("%Y-%m-%d")
         Variable.set("last_update", today)
         log.info(f"Variable 'last_update' mise à jour avec la date {today}")

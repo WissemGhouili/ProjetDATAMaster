@@ -188,7 +188,7 @@ def process_donnees_financieres(spark: SparkSession, siren_filter_set: Set[str])
 def run_pipeline():
     """
     Run the full data processing pipeline.
-    
+
     1 Process etablissements_raw to etablissements.
     2 Process unite_legale_raw to unite_legale using sirens from etablissements.
     3 Process donnees_financieres_raw to donnees_financieres using sirens from etablissements.
