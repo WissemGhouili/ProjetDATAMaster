@@ -1,4 +1,4 @@
-name: Python Tests and Lint
+name: Python Tests, Style and Lint
 
 on:
   push:
@@ -48,4 +48,8 @@ jobs:
     - name: Check docstrings
       run: pydocstyle .
 
-    - name: Check
+    - name: Check naming conventions (snake_case)
+      run: flake8 --select=N .
+
+    - name: Check flake8 style rules (inc. docstrings)
+      run: flake8 . --max-line-length=120
