@@ -1,4 +1,4 @@
-name: Python Tests, Style and Lint
+name: Python Tests and Lint
 
 on:
   push:
